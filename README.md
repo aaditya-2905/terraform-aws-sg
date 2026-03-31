@@ -7,9 +7,8 @@ This module provisions an AWS Security Group with customizable ingress and egres
 ## 🚀 Features
 
 * Create Security Group within a VPC
-* Configure multiple ingress rules dynamically
-* Configure multiple egress rules dynamically
-* Fully customizable and reusable
+* Configure multiple ingress and egress rules dynamically
+* Fully configurable ports — no hardcoding
 * Supports tagging for better resource management
 
 ---
@@ -24,35 +23,25 @@ provider "aws" {
 module "sg" {
   source = "aaditya-2905/sg/aws"
 
-  vpc_id = "vpc-xxxxxxxx"
+  vpc_id      = "vpc-xxxxxxxx"
+  environment = "dev"
 
   ingress_rules = [
     {
       from_port   = 22
       to_port     = 22
       protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = ["10.0.0.0/8"]
     },
     {
-      from_port   = 80
-      to_port     = 80
+      from_port   = 443
+      to_port     = 443
       protocol    = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
     }
   ]
 
-  egress_rules = [
-    {
-      from_port   = 0
-      to_port     = 0
-      protocol    = "-1"
-      cidr_blocks = ["0.0.0.0/0"]
-    }
-  ]
-
-  tags = {
-    Environment = "dev"
-  }
+  # egress_rules defaults to allow-all (0.0.0.0/0) if not specified
 }
 ```
 
@@ -60,33 +49,44 @@ module "sg" {
 
 ## 📥 Inputs
 
-| Name          | Description                     | Type         | Required |
-| ------------- | ------------------------------- | ------------ | -------- |
-| vpc_id        | VPC ID where SG will be created | string       | ✅        |
-| ingress_rules | List of ingress rules           | list(object) | ✅        |
-| egress_rules  | List of egress rules            | list(object) | ✅        |
-| tags          | Tags to apply                   | map(string)  | ❌        |
+| Name            | Description                              | Type         | Required | Default      |
+| --------------- | ---------------------------------------- | ------------ | -------- | ------------ |
+| `vpc_id`        | VPC ID where the SG will be created      | `string`     | ✅        | —            |
+| `environment`   | Environment name (e.g. dev, prod)        | `string`     | ✅        | —            |
+| `ingress_rules` | List of ingress rules (ports/protocols)  | `list(object)` | ✅      | `[]`         |
+| `egress_rules`  | List of egress rules (ports/protocols)   | `list(object)` | ❌      | allow-all    |
+
+Each rule object has:
+```hcl
+{
+  from_port   = number
+  to_port     = number
+  protocol    = string        # "tcp", "udp", or "-1" for all
+  cidr_blocks = list(string)
+}
+```
 
 ---
 
 ## 📤 Outputs
 
-| Name  | Description       |
-| ----- | ----------------- |
-| sg_id | Security Group ID |
+| Name    | Description                  |
+| ------- | ---------------------------- |
+| `sg_id` | ID of the created Security Group |
 
 ---
 
 ## 🧠 Notes
 
-* Ensure the VPC ID is valid and exists
-* Avoid opening all ports (0.0.0.0/0) in production unless necessary
+* Ensure the VPC ID is valid and exists in the target region
+* `ingress_rules` defaults to `[]` — **no inbound access** unless you specify rules
+* Avoid opening all ports (`0.0.0.0/0`) in production unless necessary
 * Follow least privilege principle for security rules
 
 ---
 
 ## 🔗 Example
 
-See the `examples/basic` directory for working examples.
+See the [`examples/basics`](./examples/basics) directory for a working example.
 
 ---
