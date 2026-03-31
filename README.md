@@ -90,7 +90,3 @@ module "sg" {
 See the `examples/basic` directory for working examples.
 
 ---
-
-## 📜 License
-
-MIT License
